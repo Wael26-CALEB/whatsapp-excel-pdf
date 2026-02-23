@@ -3,9 +3,12 @@ const WhatsAppBot = require('./utils/whatsapp');
 
 // Validate environment variables
 if (!process.env.AUTHORIZED_NUMBER) {
-  console.error('Error: AUTHORIZED_NUMBER is not set in .env file');
+  console.error('Error: AUTHORIZED_NUMBER environment variable is not set');
+  console.error('Please add AUTHORIZED_NUMBER in Railway Variables tab');
   process.exit(1);
 }
+
+console.log('Environment check passed. Authorized number configured.');
 
 // Initialize bot
 const bot = new WhatsAppBot(process.env.AUTHORIZED_NUMBER);
