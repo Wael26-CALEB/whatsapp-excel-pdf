@@ -1,47 +1,25 @@
-const XLSX = require('xlsx');
-const PDFDocument = require('pdfkit');
+const libre = require('libreoffice-convert');
 const fs = require('fs');
-const path = require('path');
+const { promisify } = require('util');
+
+const libreConvert = promisify(libre.convert);
 
 /**
- * Convert Excel/CSV file to PDF
+ * Convert Excel/CSV file to PDF using LibreOffice
+ * Preserves all formatting, colors, and styles exactly as in Excel
  */
 async function convertToPDF(inputPath, outputPath) {
   try {
-    // Read the Excel/CSV file
-    const workbook = XLSX.readFile(inputPath);
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    // Read the Excel file
+    const file = fs.readFileSync(inputPath);
     
-    // Convert to JSON for easier processing
-    const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    // Convert to PDF using LibreOffice
+    const pdfBuffer = await libreConvert(file, '.pdf', undefined);
     
-    // Create PDF
-    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
-    const writeStream = fs.createWriteStream(outputPath);
-    doc.pipe(writeStream);
+    // Write the PDF file
+    fs.writeFileSync(outputPath, pdfBuffer);
     
-    // Add title
-    doc.fontSize(16).text('Converted Spreadsheet', { align: 'center' });
-    doc.moveDown();
-    
-    // Add table data
-    doc.fontSize(9);
-    data.forEach((row, index) => {
-      const rowText = row.join('  |  ');
-      doc.text(rowText);
-      
-      if (index === 0) {
-        doc.moveDown(0.5);
-      }
-    });
-    
-    doc.end();
-    
-    return new Promise((resolve, reject) => {
-      writeStream.on('finish', () => resolve(outputPath));
-      writeStream.on('error', reject);
-    });
+    return outputPath;
   } catch (error) {
     throw new Error(`Conversion failed: ${error.message}`);
   }

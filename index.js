@@ -2,16 +2,18 @@ require('dotenv').config();
 const WhatsAppBot = require('./utils/whatsapp');
 
 // Validate environment variables
-if (!process.env.AUTHORIZED_NUMBER) {
-  console.error('Error: AUTHORIZED_NUMBER environment variable is not set');
-  console.error('Please add AUTHORIZED_NUMBER in Railway Variables tab');
+const authorizedNumbers = process.env.AUTHORIZED_NUMBERS || process.env.AUTHORIZED_NUMBER;
+
+if (!authorizedNumbers) {
+  console.error('Error: AUTHORIZED_NUMBERS environment variable is not set');
+  console.error('Please add AUTHORIZED_NUMBERS in .env file (comma-separated for multiple numbers)');
   process.exit(1);
 }
 
-console.log('Environment check passed. Authorized number configured.');
+console.log('Environment check passed. Authorized number(s) configured.');
 
 // Initialize bot
-const bot = new WhatsAppBot(process.env.AUTHORIZED_NUMBER);
+const bot = new WhatsAppBot(authorizedNumbers);
 
 bot.initialize().catch(error => {
   console.error('Failed to initialize bot:', error);

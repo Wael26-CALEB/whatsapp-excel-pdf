@@ -5,8 +5,16 @@ const path = require('path');
 const { convertToPDF } = require('./converter');
 
 class WhatsAppBot {
-  constructor(authorizedNumber) {
-    this.authorizedNumber = authorizedNumber;
+  constructor(authorizedNumbers) {
+    // Support both single number (string) and multiple numbers (array or comma-separated string)
+    if (typeof authorizedNumbers === 'string') {
+      this.authorizedNumbers = authorizedNumbers.split(',').map(num => num.trim());
+    } else if (Array.isArray(authorizedNumbers)) {
+      this.authorizedNumbers = authorizedNumbers;
+    } else {
+      this.authorizedNumbers = [authorizedNumbers];
+    }
+    
     this.client = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
@@ -35,7 +43,7 @@ class WhatsAppBot {
 
     this.client.on('ready', () => {
       console.log('WhatsApp client is ready!');
-      console.log(`Authorized number: ${this.authorizedNumber}`);
+      console.log(`Authorized numbers: ${this.authorizedNumbers.join(', ')}`);
     });
 
     this.client.on('message', async (message) => {
@@ -45,8 +53,8 @@ class WhatsAppBot {
 
   async handleMessage(message) {
     try {
-      // Check if message is from authorized number
-      if (message.from !== this.authorizedNumber) {
+      // Check if message is from any authorized number
+      if (!this.authorizedNumbers.includes(message.from)) {
         return;
       }
 
